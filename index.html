@@ -824,21 +824,23 @@
     </div>
   </div>
   <div id="view-averages-radar" class="main-view">
-    <div class="player-container">
-      <div class="player-columns">
-        <div class="player-column" id="playerCol1"></div>
-        <div class="player-column" id="playerCol2"></div>
-      </div>
+  <div class="player-container">
+    <div class="player-columns">
+      <div class="player-column" id="playerCol1"></div>
+      <div class="player-column" id="playerCol2"></div>
+    </div>
+  </div>
+  <div class="chart-container">
+    <div class="team-average-toggle">
+      <input type="checkbox" id="teamAvgCheckbox">
+      <label for="teamAvgCheckbox">Show Team Average</label>
     </div>
     <div class="chart-wrapper">
       <canvas id="radarChart"></canvas>
     </div>
-    <div class="team-average-toggle">
-      <input type="checkbox" id="teamAvgCheckbox" checked>
-      <label for="teamAvgCheckbox">Show Team Average</label>
-    </div>
-    <div id="loading" class="loading">Loading data...</div>
   </div>
+  <div id="loading" class="loading">Loading data...</div>
+</div>
   <div id="view-analytics" class="main-view">
     <div class="boxscore-container">
       <div id="analyticsTable">
@@ -1607,173 +1609,213 @@ players.push({
       });
     })();
     // --- AVERAGES RADAR JS ---
-    (function() {
-      const colors = [
-        "#FF6384", "#63B3ED", "#FFCE56", "#4BC0C0", 
-        "#9B59B6", "#FF9F40", "#6A0DAD", "#4169E1",
-        "#FF63FF", "#63FF84"
-      ];
-const labels = ["Points", "Rebounds", "Assists", "Steals", "Blocks"];
-const statSuffixes = ["ppg", "rpg", "apg", "spg", "bpg"];
-      const playerNames = ["Piper", "Eden", "Ella", "Makayla", "Isla", "Madyson", "Eva", "Miyavi", "Aeris", "Sophie"];
-      const columnMapping = { points: 3, rebounds: 6, assists: 7, steals: 8, blocks: 9 };
-      let players = {};
-      let radarChart = null;
-      let datasets = [];
-      async function fetchData() {
-        try {
-          const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv';
-          const response = await fetch(csvUrl);
-          const csvText = await response.text();
-          const rows = csvText.split('\n').map(row => row.split(','));
-          for (let i = 2; i <= 11; i++) {
-            if (i >= rows.length) break;
-            const row = rows[i];
-            const playerName = playerNames[i-2];
-            players[playerName] = [
-  parseFloat(row[columnMapping.points]) || 0,
-  parseFloat(row[columnMapping.rebounds]) || 0,
-  parseFloat(row[columnMapping.assists]) || 0,
-  parseFloat(row[columnMapping.steals]) || 0,   
-  parseFloat(row[columnMapping.blocks]) || 0
-];
+// --- AVERAGES RADAR JS ---
+(function() {
+  const colors = [
+    "#FF6384", "#63B3ED", "#FFCE56", "#4BC0C0", 
+    "#9B59B6", "#FF9F40", "#6A0DAD", "#4169E1",
+    "#FF63FF", "#63FF84"
+  ];
+  const labels = ["Points", "Rebounds", "Assists", "Steals", "Blocks"];
+  const statSuffixes = ["ppg", "rpg", "apg", "spg", "bpg"];
+  const playerNames = ["Piper", "Eden", "Ella", "Makayla", "Isla", "Madyson", "Eva", "Miyavi", "Aeris", "Sophie"];
+  const columnMapping = {
+    points: 3,
+    rebounds: 6,
+    assists: 7,
+    steals: 8,
+    blocks: 9
+  };
+
+  let players = {};
+  let radarChart = null;
+  let datasets = [];
+  let globalTeamAverages = [];
+  let globalTeamMaxValues = [];
+
+  async function fetchData() {
+    try {
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv';
+      const response = await fetch(csvUrl);
+      const csvText = await response.text();
+      const rows = csvText.split('\n').map(row => row.split(','));
+
+      for (let i = 2; i <= 11; i++) {
+        if (i >= rows.length) break;
+        const row = rows[i];
+        const playerName = playerNames[i-2];
+        players[playerName] = [
+          parseFloat(row[columnMapping.points]) || 0,
+          parseFloat(row[columnMapping.rebounds]) || 0,
+          parseFloat(row[columnMapping.assists]) || 0,
+          parseFloat(row[columnMapping.steals]) || 0,
+          parseFloat(row[columnMapping.blocks]) || 0
+        ];
+      }
+
+      globalTeamAverages = calculateTeamAverages();
+      globalTeamMaxValues = calculateTeamMaxValues();
+
+      document.getElementById('loading').style.display = 'none';
+      initializeChart();
+      setupPlayerCheckboxes();
+    } catch (error) {
+      document.getElementById('loading').textContent = 'Error loading data. Please try again later.';
+      console.error('Error loading radar data:', error);
+    }
+  }
+
+  function calculateTeamAverages() {
+    return labels.map((_, i) => {
+      const values = Object.values(players).map(p => p[i]);
+      return values.reduce((a, b) => a + b, 0) / values.length;
+    });
+  }
+
+  function calculateTeamMaxValues() {
+    return labels.map((_, i) => {
+      const values = Object.values(players).map(p => p[i]);
+      return Math.max(...values);
+    });
+  }
+
+  function normalizeData(playerData) {
+    return playerData.map((value, i) => {
+      const maxValue = globalTeamMaxValues[i];
+      const avgValue = globalTeamAverages[i];
+      if (maxValue === 0) return 0;
+      if (value <= avgValue) {
+        return avgValue > 0 ? (value / avgValue) * 50 : 0;
+      } else {
+        return 50 + ((value - avgValue) / (maxValue - avgValue)) * 50;
+      }
+    });
+  }
+
+  function initializeChart() {
+    const ctx = document.getElementById("radarChart").getContext("2d");
+    radarChart = new Chart(ctx, {
+      type: 'radar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const playerName = context.dataset.label;
+                let rawValue = playerName === "Team Average" 
+                  ? globalTeamAverages[context.dataIndex]
+                  : players[playerName][context.dataIndex];
+                rawValue = rawValue.toFixed(1);
+                const suffix = statSuffixes[context.dataIndex];
+                return `${playerName}: ${rawValue}${suffix}`;
+              }
+            }
           }
-          document.getElementById('loading').style.display = 'none';
-          initializeChart();
-          setupPlayerCheckboxes();
-          document.getElementById("teamAvgCheckbox").onchange();
-        } catch (error) {
-          document.getElementById('loading').textContent = 'Error loading data. Please try again later.';
+        },
+        scales: {
+          r: {
+            angleLines: { display: true, color: 'rgba(200, 200, 200, 0.5)' },
+            grid: { color: 'rgba(200, 200, 200, 0.5)' },
+            suggestedMin: 0,
+            suggestedMax: 100,
+            ticks: { display: false },
+            pointLabels: { 
+              font: { size: window.innerWidth < 400 ? 12 : 14, weight: 'bold' },
+              color: '#164835'
+            }
+          }
+        },
+        elements: {
+          line: { tension: 0.1, fill: false },
+          point: { radius: 3 }
         }
       }
-      function calculateTeamAverages() {
-        return labels.map((_, i) => {
-          const values = Object.values(players).map(p => p[i]);
-          const mean = values.reduce((a, b) => a + b, 0) / values.length;
-          const sorted = [...values].sort((a, b) => a - b);
-          const median = sorted.length % 2 === 0 
-            ? (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2 
-            : sorted[Math.floor(sorted.length/2)];
-          return Math.min(mean, median);
-        });
-      }
-      function normalizeData(playerData) {
-        const statMaxValues = labels.map((_, i) => {
-          return Math.max(...Object.values(players).map(p => p[i]));
-        });
-        return playerData.map((value, i) => value === 0 ? 0 : (value / statMaxValues[i]) * 100);
-      }
-      function initializeChart() {
-        const teamAverages = calculateTeamAverages();
-        const ctx = document.getElementById("radarChart").getContext("2d");
-        radarChart = new Chart(ctx, {
-  type: 'radar',
-  data: { labels, datasets },
-  options: {
-    responsive: true,
-            plugins: { 
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (context) => {
-                    const playerName = context.dataset.label;
-                    let rawValue = playerName === "Team Average" 
-                      ? teamAverages[context.dataIndex]
-                      : players[playerName][context.dataIndex];
-                    rawValue = context.dataIndex === 6 ? rawValue : rawValue.toFixed(1);
-                    const suffix = statSuffixes[context.dataIndex];
-                    return `${playerName}: ${rawValue}${suffix}`;
-                  }
-                }
-              }
-            },
-            scales: {
-              r: {
-                angleLines: { display: true, color: 'rgba(200, 200, 200, 0.5)' },
-                grid: { color: 'rgba(200, 200, 200, 0.5)' },
-                suggestedMin: 0,
-                suggestedMax: 100,
-                pointLabels: { 
-                  font: { size: window.innerWidth < 400 ? 12 : 14, weight: 'bold' },
-                  color: '#164835'
-                },
-                ticks: { display: false }
-              }
-            },
-            elements: {
-              line: { tension: 0.1, fill: false },
-              point: { radius: 3 }
-            }
+    });
+  }
+
+  function setupPlayerCheckboxes() {
+    const col1 = document.getElementById("playerCol1");
+    const col2 = document.getElementById("playerCol2");
+    playerNames.forEach((name, i) => {
+      const div = document.createElement("div");
+      div.className = "player-checkbox";
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = name;
+      checkbox.style.setProperty('--player-color', colors[i]);
+      const label = document.createElement("label");
+      label.htmlFor = name;
+      label.textContent = name;
+      label.style.color = "#333";
+      checkbox.onchange = function() {
+        const index = datasets.findIndex(d => d.label === name);
+        if (this.checked) {
+          this.style.opacity = '1';
+          if (index === -1) {
+            datasets.push({
+              label: name,
+              data: normalizeData(players[name]),
+              borderColor: colors[i],
+              borderWidth: 2,
+              pointBackgroundColor: colors[i],
+              order: i
+            });
           }
-        });
-      }
-      function setupPlayerCheckboxes() {
-        const col1 = document.getElementById("playerCol1");
-        const col2 = document.getElementById("playerCol2");
-        playerNames.forEach((name, i) => {
-          const div = document.createElement("div");
-          div.className = "player-checkbox";
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.id = name;
-          checkbox.style.setProperty('--player-color', colors[i]);
-          const label = document.createElement("label");
-          label.htmlFor = name;
-          label.textContent = name;
-          label.style.color = "#333";
-          checkbox.onchange = function() {
-            const index = datasets.findIndex(d => d.label === name);
-            if (this.checked) {
-              this.style.opacity = '1';
-              if (index === -1) {
-                datasets.push({
-                  label: name,
-                  data: normalizeData(players[name]),
-                  borderColor: colors[i],
-                  borderWidth: 2,
-                  pointBackgroundColor: colors[i],
-                  order: i
-                });
-              }
-            } else {
-              this.style.opacity = '0.2';
-              if (index > -1) {
-                datasets.splice(index, 1);
-              }
-            }
-            radarChart.update();
-          };
-          div.appendChild(checkbox);
-          div.appendChild(label);
-          if (i < Math.ceil(playerNames.length / 2)) {
-            col1.appendChild(div);
-          } else {
-            col2.appendChild(div);
+        } else {
+          this.style.opacity = '0.2';
+          if (index > -1) {
+            datasets.splice(index, 1);
           }
-        });
-      }
-      document.getElementById("teamAvgCheckbox").onchange = function() {
-        if (!radarChart) return;
-        const teamAverages = calculateTeamAverages();
-        const index = datasets.findIndex(d => d.label === "Team Average");
-        if (this.checked && index === -1) {
-          datasets.push({
-            label: "Team Average",
-            data: normalizeData(teamAverages),
-            borderColor: "#999",
-            borderWidth: 2,
-            borderDash: [6, 4],
-            pointBackgroundColor: "#999",
-            order: 1000
-          });
-        } else if (!this.checked && index > -1) {
-          datasets.splice(index, 1);
         }
         radarChart.update();
       };
-      // No resize handler for fixed chart
-      document.addEventListener('DOMContentLoaded', fetchData);
-    })();
+      div.appendChild(checkbox);
+      div.appendChild(label);
+      if (i < Math.ceil(playerNames.length / 2)) {
+        col1.appendChild(div);
+      } else {
+        col2.appendChild(div);
+      }
+    });
+  }
+
+  document.getElementById("teamAvgCheckbox").onchange = function() {
+    if (!radarChart) return;
+    const index = datasets.findIndex(d => d.label === "Team Average");
+    if (this.checked && index === -1) {
+      datasets.push({
+        label: "Team Average",
+        data: Array(labels.length).fill(50),
+        borderColor: "#999",
+        borderWidth: 2,
+        borderDash: [6, 4],
+        pointBackgroundColor: "#999",
+        order: 1000
+      });
+    } else if (!this.checked && index > -1) {
+      datasets.splice(index, 1);
+    }
+    radarChart.update();
+  };
+
+  window.addEventListener('resize', function() {
+    const canvas = document.getElementById('radarChart');
+    const container = document.querySelector('.chart-wrapper');
+    if (canvas && container) {
+      canvas.width = container.offsetWidth - 2;
+      canvas.height = container.offsetWidth * 0.8;
+      if (radarChart) {
+        radarChart.update();
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', fetchData);
+})();
     // --- ANALYTICS JS ---
     (function() {
       const analyticsCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv";
