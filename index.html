@@ -413,6 +413,80 @@
       #view-boxscores .game-list li { font-size: 14px; }
     }
 
+    /* --- Stat Leaders --- */
+#view-stat-leaders .leaders-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+#view-stat-leaders .stat-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  color: #333;
+}
+
+#view-stat-leaders .stat-title {
+  color: #164835;
+  font-weight: 600;
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e6f2ed;
+}
+
+#view-stat-leaders .leaders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#view-stat-leaders .leaders-table th {
+  background-color: #164835;
+  color: white;
+  padding: 8px 5px;
+  text-align: center;
+  font-weight: 500;
+}
+
+#view-stat-leaders .leaders-table td {
+  padding: 8px 5px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+#view-stat-leaders .leaders-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#view-stat-leaders .leaders-table .rank {
+  width: 40px;
+  font-weight: 600;
+}
+
+#view-stat-leaders .leaders-table .player-name {
+  text-align: left;
+  padding-left: 10px;
+  font-weight: 500;
+}
+
+#view-stat-leaders .leaders-table .stat-value {
+  font-weight: 600;
+  color: #164835;
+}
+
+#view-stat-leaders .loading {
+  text-align: center;
+  padding: 40px;
+  color: white;
+  grid-column: 1 / -1;
+}
+
     /* --- Averages Table --- */
     #view-averages-table .boxscore-container {
       background-color: white;
@@ -746,8 +820,8 @@
     <div class="nav-menu">
       <button class="menu-btn" id="menuToggle">☰</button>
       <div class="menu-content" id="menuContent">
-        <a href="#" class="menu-item" data-view="roster">Roster</a>
         <a href="#" class="menu-item" data-view="boxscores">Boxscores</a>
+		<a href="#" class="menu-item" data-view="stat-leaders">Stat Leaders</a>
         <a href="#" class="menu-item" data-view="averages-table">Averages (Table)</a>
         <a href="#" class="menu-item" data-view="averages-radar">Averages (Radar)</a>
         <a href="#" class="menu-item" data-view="analytics">Analytics</a>
@@ -755,11 +829,7 @@
     </div>
   </div>
 
-  <div id="view-roster" class="main-view">
-    <div id="players-container-roster">
-      <div class="loading">Loading player data...</div>
-    </div>
-  </div>
+
   <div id="view-boxscores" class="main-view">
     <div id="gameHeader"></div>
     <div class="boxscore-container" id="boxscore">
@@ -782,10 +852,16 @@
         <li data-round="12">ROUND 12 - East Perth Eagles</li>
         <li data-round="13">ROUND 13 - Cockburn Cougars</li>
         <li data-round="14">ROUND 14 - Eastern Suns</li>
-        <li data-round="15" class="current">ROUND 15 - SouthWest Slammers (Blue)</li>
-        <li data-round="16" class="future">ROUND 16 - Warwick Senators</li>
+        <li data-round="15">ROUND 15 - SouthWest Slammers (Blue)</li>
+        <li data-round="16" class="current">ROUND 16 - Warwick Senators</li>
+        <li data-round="17" class="future">QUARTER FINAL - Eastern Suns</li>		  
       </ul>
     </div>
+  </div>
+  <div id="view-stat-leaders" class="main-view">
+   <div class="leaders-container">
+    <div class="loading">Loading stat leaders...</div>
+   </div>
   </div>
   <div id="view-averages-table" class="main-view">
     <div class="boxscore-container">
@@ -816,7 +892,7 @@
       </ul>
     </div>
   </div>
-  <div id="view-averages-radar" class="main-view">
+<div id="view-averages-radar" class="main-view">
   <div class="player-container">
     <div class="player-columns">
       <div class="player-column" id="playerCol1"></div>
@@ -926,13 +1002,13 @@
   <script>
     // --- Menu logic for single-page navigation ---
     const views = {
-      roster: {
-        id: "view-roster",
-        title: "2025 Player Roster"
-      },
       boxscores: {
         id: "view-boxscores",
         title: "Game Boxscores"
+      },
+	  "stat-leaders": {
+        id: "view-stat-leaders",
+        title: "2025 Player Stat Leaders"
       },
       "averages-table": {
         id: "view-averages-table",
@@ -979,190 +1055,7 @@
         showView(this.dataset.view);
       });
     });
-    // --- ROSTER JS ---
-    (function() {
-      const gameCsvUrls = {
- 1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=797304496&single=true&output=csv",
-        2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=1379588754&single=true&output=csv",
-        3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=1722787100&single=true&output=csv",
-        4: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=0&single=true&output=csv",
-        5: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=1748576796&single=true&output=csv",
-        6: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=2013793463&single=true&output=csv",
-        7: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=488403667&single=true&output=csv",
-        8: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=1640243385&single=true&output=csv",
-        9: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=690207392&single=true&output=csv",
-        10: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=185294638&single=true&output=csv",
-        11: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=390013824&single=true&output=csv",
-        12: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=516589006&single=true&output=csv",
-        13: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=1873389368&single=true&output=csv",
-        14: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=1120402390&single=true&output=csv",
-        15: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=954827242&single=true&output=csv",
-        16: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=405488937&single=true&output=csv"     
-      };
-      const averagesCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv";
-      function parseCsv(text) { return text.trim().split('\n').map(row => row.split(',')); }
-      function isDNP(stats) { return stats && stats[2] && stats[2].includes('DNP'); }
-      function formatOpponent(opponent) {
-        if (!opponent) return '';
-        if (opponent.includes('Slammers(Blue)')) return 'SWS(Blue)';
-        if (opponent.includes('Slammers(Red)')) return 'SWS(Red)';
-        const words = opponent.trim().split(' ');
-        return words[words.length - 1];
-      }
-      function createPlayerCard(playerData, rowNumber, allGameStats) {
-        const playerId = rowNumber - 2;
-        let gameStatsRows = '';
-        allGameStats.forEach(game => {
-          const { round, opponent, playerStats, unavailable } = game;
-          const formattedOpponent = formatOpponent(opponent);
-          if (unavailable) {
-            gameStatsRows += `
-              <tr>
-                <td>${round || ''}</td>
-                <td>${formattedOpponent || ''}</td>
-                <td colspan="7" class="unavailable-cell">Game data unavailable</td>
-              </tr>
-            `;
-          } else if (isDNP(playerStats)) {
-            const dnpReason = playerStats[2] || 'DNP';
-            gameStatsRows += `
-              <tr>
-                <td>${round}</td>
-                <td>${formattedOpponent}</td>
-                <td colspan="7" class="dnp-cell">${dnpReason}</td>
-              </tr>
-            `;
-          } else {
-            gameStatsRows += `
-              <tr>
-                <td>${round}</td>
-                <td>${formattedOpponent}</td>
-                <td>${playerStats[2] || '0'}</td>
-                <td>${playerStats[5] || '0'}</td>
-                <td>${playerStats[6] || '0'}</td>
-                <td>${playerStats[7] || '0'}</td>
-                <td>${playerStats[8] || '0'}</td>
-                <td>${playerStats[13] || '0%'}</td>
-                <td>${playerStats[19] || '0%'}</td>
-              </tr>
-            `;
-          }
-        });
-        return `
-          <div class="player-container">
-            <div class="player-card">
-              <div class="player-header">
-                <div class="player-info">
-                  <h1 class="player-name"><span class="player-number">${playerData[0]}</span>${playerData[1]}</h1>
-                  <div class="stats-buttons">
-                    <button class="stat-button">
-                      <span>${playerData[3] || '0.0'}</span>
-                      <span>PTS</span>
-                    </button>
-                    <button class="stat-button">
-                      <span>${playerData[6] || '0.0'}</span>
-                      <span>REB</span>
-                    </button>
-                    <button class="stat-button">
-                      <span>${playerData[7] || '0.0'}</span>
-                      <span>AST</span>
-                    </button>
-                    <button class="stat-button">
-                      <span>${playerData[8] || '0.0'}</span>
-                      <span>STL</span>
-                    </button>
-                    <button class="stat-button">
-                      <span>${playerData[9] || '0.0'}</span>
-                      <span>BLK</span>
-                    </button>
-                  </div>
-                  <a class="stats-toggle" id="statsToggle${playerId}">VIEW GAME STATS ▼</a>
-                </div>
-              </div>
-              <div class="stats-container" id="statsContainer${playerId}">
-                <div class="stats-section games-table">
-                  <h3 class="stats-title">WABL 2025 Games</h3>
-                  <table class="stats-table">
-                    <thead>
-                      <tr>
-                        <th>R</th><th>OPP</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG%</th><th>FT%</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${gameStatsRows}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-      function setupStatsToggle(toggleId, containerId) {
-        const statsToggle = document.getElementById(toggleId);
-        const statsContainer = document.getElementById(containerId);
-        if (statsToggle && statsContainer) {
-          statsToggle.addEventListener('click', function() {
-            statsContainer.classList.toggle('expanded');
-            this.textContent = statsContainer.classList.contains('expanded') ? 
-              'HIDE GAME STATS ▲' : 'VIEW GAME STATS ▼';
-          });
-        }
-      }
-      async function fetchAndRenderPlayers() {
-        try {
-          const gameFetchPromises = Object.entries(gameCsvUrls).map(async ([gameNumber, url]) => {
-            try {
-              const response = await fetch(url);
-              if (!response.ok) throw new Error('Fetch failed');
-              const csvText = await response.text();
-              const rows = parseCsv(csvText);
-              const roundCell = rows[1]?.[22] || '';
-              const opponentCell = rows[6]?.[22] || '';
-              const round = roundCell.split(' ').pop();
-              const opponent = opponentCell;
-              return { gameNumber, rows, round, opponent, unavailable: false };
-            } catch (err) {
-              return { gameNumber, rows: [], round: '', opponent: '', unavailable: true };
-            }
-          });
-          const averagesPromise = fetch(averagesCsvUrl).then(r => r.text());
-          const [games, averagesCsvText] = await Promise.all([Promise.all(gameFetchPromises), averagesPromise]);
-          const averagesRows = parseCsv(averagesCsvText);
-          const playerRows = averagesRows.slice(2, 12);
-          let playersHtml = '';
-          for (let i = 0; i < playerRows.length; i++) {
-            const rowNumber = i + 3;
-            const playerData = playerRows[i];
-            const allGameStats = games.map(game => {
-              if (game.unavailable) {
-                return { round: game.round, opponent: game.opponent, playerStats: null, unavailable: true };
-              }
-              const gamePlayerRow = rowNumber - 1;
-              const playerStats = game.rows.length > gamePlayerRow ? game.rows[gamePlayerRow] : [];
-              return {
-                round: game.round,
-                opponent: game.opponent,
-                playerStats,
-                unavailable: false
-              };
-            });
-            playersHtml += createPlayerCard(playerData, rowNumber, allGameStats);
-          }
-          document.getElementById('players-container-roster').innerHTML = playersHtml;
-          for (let i = 1; i <= 10; i++) {
-            setupStatsToggle(`statsToggle${i}`, `statsContainer${i}`);
-          }
-        } catch (error) {
-          document.getElementById('players-container-roster').innerHTML = `
-            <div class="loading" style="color: #ff6b6b;">
-              Error loading player data. Please try again later.
-            </div>
-          `;
-        }
-      }
-      document.addEventListener('DOMContentLoaded', fetchAndRenderPlayers);
-    })();
+
     // --- BOXSCORER JS ---
     (function() {
       const gameSheetUrls = {
@@ -1184,7 +1077,7 @@
         16: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=405488937&single=true&output=csv"
       };
       const seasonData = {};
-      let currentGame = 15;
+      let currentGame = 16;
       let sortConfig = { key: null, direction: 'desc' };
       async function fetchLiveStats(round) {
         const csvUrl = gameSheetUrls[round];
@@ -1320,9 +1213,7 @@ players.push({
         });
         const fgPct = totals.fga > 0 ? (totals.fgm / totals.fga * 100).toFixed(1) : 0;
         const threePct = totals["3pa"] > 0 ? (totals["3pm"] / totals["3pa"] * 100).toFixed(1) : 0;
-        const ftPct = totals.fta > 0 
-  ? (totals.ftm / totals.fta * 100).toFixed(1) + "%" 
-  : "-";
+        const ftPct = totals.fta > 0 ? (totals.ftm / totals.fta * 100).toFixed(1) : 0;
         let html = `
           <table class="stats-table">
             <thead>
@@ -1360,9 +1251,7 @@ players.push({
           } else {
             const playerFgPct = player.fga > 0 ? (player.fgm / player.fga * 100).toFixed(1) : 0;
             const playerThreePct = player["3pa"] > 0 ? (player["3pm"] / player["3pa"] * 100).toFixed(1) : 0;
-            const playerFtPct = player.fta > 0 
-  ? (player.ftm / player.fta * 100).toFixed(1) + "%" 
-  : "-";
+            const playerFtPct = player.fta > 0 ? (player.ftm / player.fta * 100).toFixed(1) : 0;
             html += `
               <tr>
                 <td class="player-number">${player.number}</td>
@@ -1379,8 +1268,8 @@ players.push({
                 <td>${player["3pm"]}-${player["3pa"]}</td>
                 <td>${playerThreePct}%</td>
                 <td>${player.ftm}-${player.fta}</td>
-                <td>${playerFtPct}</td>
-                <td style="color:#164835; font-weight:700">${player.per}</td>
+                <td>${playerFtPct}%</td>
+<td style="color:#164835; font-weight:700">${player.per}</td>
               </tr>
             `;
           }
@@ -1401,7 +1290,7 @@ players.push({
               <td>${totals["3pm"]}-${totals["3pa"]}</td>
               <td>${threePct}%</td>
               <td>${totals.ftm}-${totals.fta}</td>
-              <td>${ftPct}</td>
+              <td>${ftPct}%</td>
             </tr>
           </tbody>
         </table>
@@ -1442,15 +1331,208 @@ players.push({
         renderBoxscore(currentGame);
       });
     })();
+// --- STAT LEADERS JS ---
+(function() {
+  const averagesCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv";
+  
+  async function fetchAveragesData() {
+    try {
+      const response = await fetch(averagesCsvUrl);
+      const csvText = await response.text();
+      const rows = csvText.split('\n').map(row => row.split(','));
+      const players = [];
+      
+      for (let i = 2; i <= 12; i++) {
+        if (i >= rows.length) continue;
+        const row = rows[i];
+        const playerNumber = parseInt(row[0]) || 0;
+        if (playerNumber === 0) continue;
+        
+        players.push({
+          number: playerNumber,
+          name: row[1] || "",
+          games: parseInt(row[2]) || 0,
+          pts: parseFloat(row[3]) || 0,
+          reb: parseFloat(row[6]) || 0,
+          ast: parseFloat(row[7]) || 0,
+          stl: parseFloat(row[8]) || 0,
+          blk: parseFloat(row[9]) || 0,
+          to: parseFloat(row[10]) || 0,
+          fgm: parseFloat(row[12]) || 0,
+          fga: parseFloat(row[13]) || 0,
+          ftm: parseFloat(row[18]) || 0,
+          fta: parseFloat(row[19]) || 0
+        });
+      }
+      
+      return players;
+    } catch (error) {
+      return [];
+    }
+  }
+  
+  function formatDecimal(num) {
+    return num % 1 === 0 ? num.toFixed(1) : num.toFixed(1);
+  }
+  
+  function formatPercentage(made, attempted) {
+    if (attempted === 0) return "0.0%";
+    const pct = (made / attempted * 100);
+    return pct.toFixed(1) + "%";
+  }
+  
+  function getTopPlayers(players, statKey, count = 5, descending = true) {
+    // For percentages, we need to calculate them first
+    if (statKey === 'fgPct') {
+      players = players.map(p => ({
+        ...p,
+        fgPct: p.fga > 0 ? p.fgm / p.fga : 0
+      }));
+    } else if (statKey === 'ftPct') {
+      players = players.map(p => ({
+        ...p,
+        ftPct: p.fta > 0 ? p.ftm / p.fta : 0
+      }));
+    }
+    
+    // Sort players by the stat
+    const sorted = [...players].sort((a, b) => {
+      if (descending) {
+        return b[statKey] - a[statKey];
+      } else {
+        return a[statKey] - b[statKey];
+      }
+    });
+    
+    // Return top players (filter out players with 0 in the stat)
+    return sorted
+      .filter(p => p[statKey] > 0)
+      .slice(0, count);
+  }
+  
+  function formatStatValue(player, statKey) {
+    switch(statKey) {
+      case 'pts':
+      case 'reb':
+      case 'ast':
+      case 'stl':
+      case 'blk':
+      case 'to':
+        return formatDecimal(player[statKey]);
+      case 'fgPct':
+        return formatPercentage(player.fgm, player.fga);
+      case 'ftPct':
+        return formatPercentage(player.ftm, player.fta);
+      default:
+        return player[statKey];
+    }
+  }
+  
+  async function renderStatLeaders() {
+    const container = document.querySelector('#view-stat-leaders .leaders-container');
+    container.innerHTML = '<div class="loading">Loading stat leaders...</div>';
+    
+    const players = await fetchAveragesData();
+    
+    if (players.length === 0) {
+      container.innerHTML = '<div class="loading">Error loading stat leaders data.</div>';
+      return;
+    }
+    
+    const statCategories = [
+      { key: 'pts', title: 'Points Per Game', descending: true },
+      { key: 'reb', title: 'Rebounds Per Game', descending: true },
+      { key: 'ast', title: 'Assists Per Game', descending: true },
+      { key: 'stl', title: 'Steals Per Game', descending: true },
+      { key: 'blk', title: 'Blocks Per Game', descending: true },
+      { key: 'to', title: 'Turnovers Per Game', descending: false }, // Lower is better
+      { key: 'fgPct', title: 'Field Goal Percentage', descending: true },
+      { key: 'ftPct', title: 'Free Throw Percentage', descending: true }
+    ];
+    
+    let html = '';
+    
+    statCategories.forEach(category => {
+      const topPlayers = getTopPlayers(players, category.key, 5, category.descending);
+      
+      html += `
+        <div class="stat-card">
+          <div class="stat-title">${category.title}</div>
+          <table class="leaders-table">
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th class="player-name">Player</th>
+                <th>${category.key === 'pts' ? 'PTS' : 
+                      category.key === 'reb' ? 'REB' : 
+                      category.key === 'ast' ? 'AST' : 
+                      category.key === 'stl' ? 'STL' : 
+                      category.key === 'blk' ? 'BLK' : 
+                      category.key === 'to' ? 'TO' : 
+                      category.key === 'fgPct' ? 'FG%' : 'FT%'}</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      if (topPlayers.length === 0) {
+        html += `
+          <tr>
+            <td colspan="3" style="text-align: center; padding: 15px; color: #888;">
+              No data available
+            </td>
+          </tr>
+        `;
+      } else {
+        topPlayers.forEach((player, index) => {
+          html += `
+            <tr>
+              <td class="rank">${index + 1}</td>
+              <td class="player-name">${player.name}</td>
+              <td class="stat-value">${formatStatValue(player, category.key)}</td>
+            </tr>
+          `;
+        });
+      }
+      
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+  
+  // Render when the view is shown
+  document.addEventListener('DOMContentLoaded', function() {
+    const statLeadersView = document.getElementById('view-stat-leaders');
+    
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'class') {
+          const isActive = statLeadersView.classList.contains('active');
+          if (isActive) {
+            renderStatLeaders();
+          }
+        }
+      });
+    });
+    
+    observer.observe(statLeadersView, { attributes: true });
+  });
+})();	
+	
     // --- AVERAGES TABLE JS ---
     (function() {
       const averagesCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv";
       function formatDecimal(num) { return num % 1 === 0 ? num.toFixed(1) : num.toFixed(1); }
-function formatPercentage(made, attempted) {
-  if (attempted === 0) return "-";
-  const pct = (made / attempted * 100);
-  return pct % 1 === 0 ? pct.toFixed(0) + "%" : pct.toFixed(1) + "%";
-}
+      function formatPercentage(made, attempted) {
+        if (attempted === 0) return "0%";
+        const pct = (made / attempted * 100);
+        return pct % 1 === 0 ? pct.toFixed(0) + "%" : pct.toFixed(1) + "%";
+      }
       async function fetchAveragesData() {
         try {
           const response = await fetch(averagesCsvUrl);
@@ -1808,7 +1890,7 @@ function formatPercentage(made, attempted) {
     // --- ANALYTICS JS ---
     (function() {
       const analyticsCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv";
-function formatDecimal(num) { return isNaN(num) ? "0.00" : num.toFixed(2); }
+      function formatDecimal(num) { return isNaN(num) ? "0.00" : num.toFixed(2); }
 function formatPercentage(num) {
   if (isNaN(num)) return "0.00%";
   return (num * 100).toFixed(2) + "%";
