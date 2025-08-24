@@ -413,7 +413,7 @@
       #view-boxscores .game-list li { font-size: 14px; }
     }
 
-    /* --- Stat Leaders --- */
+  /* --- Stat Leaders --- */
 #view-stat-leaders .leaders-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -434,30 +434,29 @@
 #view-stat-leaders .stat-title {
   color: #164835;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 16px;
   margin: 0 0 15px 0;
   text-align: center;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e6f2ed;
+  padding: 8px;
+  background-color: #e6f2ed;
+  border-radius: 4px;
 }
 
 #view-stat-leaders .leaders-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 #view-stat-leaders .leaders-table th {
-  background-color: #164835;
-  color: white;
-  padding: 8px 5px;
-  text-align: center;
-  font-weight: 500;
+  display: none; /* This hides the column headers */
 }
 
 #view-stat-leaders .leaders-table td {
   padding: 8px 5px;
   text-align: center;
   border-bottom: 1px solid #eee;
+  font-size: 14px;
 }
 
 #view-stat-leaders .leaders-table tr:nth-child(even) {
@@ -1371,9 +1370,9 @@ players.push({
     }
   }
   
-  function formatDecimal(num) {
-    return num % 1 === 0 ? num.toFixed(1) : num.toFixed(1);
-  }
+function formatDecimal(num) {
+  return num.toFixed(2);
+}
   
   function formatPercentage(made, attempted) {
     if (attempted === 0) return "0.0%";
@@ -1410,23 +1409,23 @@ players.push({
       .slice(0, count);
   }
   
-  function formatStatValue(player, statKey) {
-    switch(statKey) {
-      case 'pts':
-      case 'reb':
-      case 'ast':
-      case 'stl':
-      case 'blk':
-      case 'to':
-        return formatDecimal(player[statKey]);
-      case 'fgPct':
-        return formatPercentage(player.fgm, player.fga);
-      case 'ftPct':
-        return formatPercentage(player.ftm, player.fta);
-      default:
-        return player[statKey];
-    }
+function formatStatValue(player, statKey) {
+  switch(statKey) {
+    case 'pts':
+    case 'reb':
+    case 'ast':
+    case 'stl':
+    case 'blk':
+    case 'to':
+      return formatDecimal(player[statKey]);
+    case 'fgPct':
+      return formatPercentage(player.fgm, player.fga);
+    case 'ftPct':
+      return formatPercentage(player.ftm, player.fta);
+    default:
+      return player[statKey];
   }
+}
   
   async function renderStatLeaders() {
     const container = document.querySelector('#view-stat-leaders .leaders-container');
@@ -1458,22 +1457,10 @@ players.push({
       html += `
         <div class="stat-card">
           <div class="stat-title">${category.title}</div>
-          <table class="leaders-table">
-            <thead>
-              <tr>
-                <th class="rank">#</th>
-                <th class="player-name">Player</th>
-                <th>${category.key === 'pts' ? 'PTS' : 
-                      category.key === 'reb' ? 'REB' : 
-                      category.key === 'ast' ? 'AST' : 
-                      category.key === 'stl' ? 'STL' : 
-                      category.key === 'blk' ? 'BLK' : 
-                      category.key === 'to' ? 'TO' : 
-                      category.key === 'fgPct' ? 'FG%' : 'FT%'}</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
+html += `
+  <table class="leaders-table">
+    <tbody>
+`;
       
       if (topPlayers.length === 0) {
         html += `
