@@ -1341,15 +1341,17 @@ players.push({
       const rows = csvText.split('\n').map(row => row.split(','));
       const players = [];
       
-      for (let i = 2; i <= 12; i++) {
+      // The averages data starts at row 3 (index 2) and goes to row 12 (index 11)
+      for (let i = 2; i <= 11; i++) {
         if (i >= rows.length) continue;
         const row = rows[i];
-        const playerNumber = parseInt(row[0]) || 0;
-        if (playerNumber === 0) continue;
+        
+        // Skip empty rows or rows without proper data
+        if (!row || row.length < 20 || !row[1]) continue;
         
         players.push({
-          number: playerNumber,
-          name: row[1] || "",
+          number: parseInt(row[0]) || 0,
+          name: row[1].trim(),
           games: parseInt(row[2]) || 0,
           pts: parseFloat(row[3]) || 0,
           reb: parseFloat(row[6]) || 0,
@@ -1366,6 +1368,7 @@ players.push({
       
       return players;
     } catch (error) {
+      console.error('Error fetching averages data:', error);
       return [];
     }
   }
