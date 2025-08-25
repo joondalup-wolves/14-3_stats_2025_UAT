@@ -1374,11 +1374,29 @@ function formatDecimal(num) {
   return num.toFixed(2);
 }
   
-  function formatPercentage(made, attempted) {
-    if (attempted === 0) return "0.0%";
-    const pct = (made / attempted * 100);
-    return pct.toFixed(1) + "%";
+function formatPercentage(made, attempted) {
+  if (attempted === 0) return "0.0%";
+  const pct = (made / attempted * 100);
+  return pct.toFixed(1) + "%";
+}
+
+function formatStatValue(player, statKey) {
+  switch(statKey) {
+    case 'pts':
+    case 'reb':
+    case 'ast':
+    case 'stl':
+    case 'blk':
+    case 'to':
+      return formatDecimal(player[statKey]);
+    case 'fgPct':
+      return formatPercentage(player.fgm, player.fga);
+    case 'ftPct':
+      return formatPercentage(player.ftm, player.fta);
+    default:
+      return player[statKey];
   }
+}
   
 function getTopPlayers(players, statKey, count = 4, descending = true) {
   // For percentages, we need to calculate them first
