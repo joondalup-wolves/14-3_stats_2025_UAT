@@ -1546,11 +1546,11 @@ topPlayers.forEach((player, index) => {
     (function() {
       const averagesCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx_Gj_jt5i_wvL07zSs48DPlE_CkkP49G6EnhYcLKKH3tJvn0r9pEOrIySkkc6TJ1dyGHSA2a5GbW7/pub?gid=711431833&single=true&output=csv";
       function formatDecimal(num) { return num % 1 === 0 ? num.toFixed(1) : num.toFixed(1); }
-      function formatPercentage(made, attempted) {
-        if (attempted === 0) return "0%";
-        const pct = (made / attempted * 100);
-        return pct % 1 === 0 ? pct.toFixed(0) + "%" : pct.toFixed(1) + "%";
-      }
+function formatPercentage(made, attempted) {
+  if (attempted === 0) return "-";
+  const pct = (made / attempted * 100);
+  return pct % 1 === 0 ? pct.toFixed(0) + "%" : pct.toFixed(1) + "%";
+}
       async function fetchAveragesData() {
         try {
           const response = await fetch(averagesCsvUrl);
