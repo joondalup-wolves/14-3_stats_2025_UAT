@@ -1210,9 +1210,9 @@ players.push({
             totals.fta += player.fta;
           }
         });
-        const fgPct = totals.fga > 0 ? (totals.fgm / totals.fga * 100).toFixed(1) : 0;
-        const threePct = totals["3pa"] > 0 ? (totals["3pm"] / totals["3pa"] * 100).toFixed(1) : 0;
-        const ftPct = totals.fta > 0 ? (totals.ftm / totals.fta * 100).toFixed(1) : 0;
+const fgPct = totals.fga > 0 ? (totals.fgm / totals.fga * 100).toFixed(1) + "%" : "-";
+const threePct = totals["3pa"] > 0 ? (totals["3pm"] / totals["3pa"] * 100).toFixed(1) + "%" : "-";
+const ftPct = totals.fta > 0 ? (totals.ftm / totals.fta * 100).toFixed(1) + "%" : "-";
         let html = `
           <table class="stats-table">
             <thead>
@@ -1248,9 +1248,9 @@ players.push({
               </tr>
             `;
           } else {
-            const playerFgPct = player.fga > 0 ? (player.fgm / player.fga * 100).toFixed(1) : 0;
-            const playerThreePct = player["3pa"] > 0 ? (player["3pm"] / player["3pa"] * 100).toFixed(1) : 0;
-            const playerFtPct = player.fta > 0 ? (player.ftm / player.fta * 100).toFixed(1) : 0;
+const playerFgPct = player.fga > 0 ? (player.fgm / player.fga * 100).toFixed(1) + "%" : "-";
+const playerThreePct = player["3pa"] > 0 ? (player["3pm"] / player["3pa"] * 100).toFixed(1) + "%" : "-";
+const playerFtPct = player.fta > 0 ? (player.ftm / player.fta * 100).toFixed(1) + "%" : "-";
             html += `
               <tr>
                 <td class="player-number">${player.number}</td>
@@ -1263,11 +1263,11 @@ players.push({
                 <td>${player.to}</td>
                 <td>${player.pf}</td>
                 <td>${player.fgm}-${player.fga}</td>
-                <td>${playerFgPct}%</td>
+                <td>${playerFgPct}</td>
                 <td>${player["3pm"]}-${player["3pa"]}</td>
-                <td>${playerThreePct}%</td>
+                <td>${playerThreePct}</td>
                 <td>${player.ftm}-${player.fta}</td>
-                <td>${playerFtPct}%</td>
+                <td>${playerFtPct}</td>
 <td style="color:#164835; font-weight:700">${player.per}</td>
               </tr>
             `;
@@ -1285,11 +1285,11 @@ players.push({
               <td>${totals.to}</td>
               <td>${totals.pf}</td>
               <td>${totals.fgm}-${totals.fga}</td>
-              <td>${fgPct}%</td>
+              <td>${fgPct}</td>
               <td>${totals["3pm"]}-${totals["3pa"]}</td>
-              <td>${threePct}%</td>
+              <td>${threePct}</td>
               <td>${totals.ftm}-${totals.fta}</td>
-              <td>${ftPct}%</td>
+              <td>${ftPct}</td>
             </tr>
           </tbody>
         </table>
