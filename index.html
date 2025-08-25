@@ -1406,22 +1406,17 @@ function getTopPlayers(players, statKey, count = 4, descending = true) {
   // Filter out players with 0 in the stat
   const filtered = sorted.filter(p => p[statKey] > 0);
   
-  // If we have fewer than 4 players, just return them all
-  if (filtered.length <= count) {
-    return filtered;
-  }
+  if (filtered.length === 0) return [];
   
-  // Get the top 4 players
-  const topPlayers = filtered.slice(0, count);
+  // Get the cutoff value for 4th place (or last place if fewer than 4)
+  const cutoffIndex = Math.min(count - 1, filtered.length - 1);
+  const cutoffValue = filtered[cutoffIndex][statKey];
   
-  // Check if there's a tie for 4th place
-  const fourthPlaceValue = topPlayers[count - 1][statKey];
-  const tiedPlayers = filtered.slice(count).filter(p => p[statKey] === fourthPlaceValue);
-  
-  // If there are tied players, add them to the list
-  if (tiedPlayers.length > 0) {
-    return [...topPlayers, ...tiedPlayers];
-  }
+  // Include all players with values equal to or better than the cutoff
+  // (for descending: >= cutoffValue, for ascending: <= cutoffValue)
+  const topPlayers = filtered.filter(player => 
+    descending ? player[statKey] >= cutoffValue : player[statKey] <= cutoffValue
+  );
   
   return topPlayers;
 }
@@ -1476,21 +1471,22 @@ let previousValue = null;
 topPlayers.forEach((player, index) => {
   const currentValue = player[category.key];
   
-  // If this player has the same value as the previous one, they share the same rank
-  // Otherwise, increment the rank
-  if (previousValue !== null && currentValue === previousValue) {
-    // Same rank as previous player
-  } else {
-    currentRank = index + 1;
+  // Only show players who are rank 4 or tied for rank 4
+  if (currentRank <= 4) {
+    // If this player has the same value as the previous one, they share the same rank
+    // Otherwise, increment the rank
+    if (index === 0 || currentValue !== previousValue) {
+      currentRank = index + 1;
+    }
+    
+    html += `
+      <tr>
+        <td class="rank">${currentRank}</td>
+        <td class="player-name">${player.name}</td>
+        <td class="stat-value">${formatStatValue(player, category.key)}</td>
+      </tr>
+    `;
   }
-  
-  html += `
-    <tr>
-      <td class="rank">${currentRank}</td>
-      <td class="player-name">${player.name}</td>
-      <td class="stat-value">${formatStatValue(player, category.key)}</td>
-    </tr>
-  `;
   
   previousValue = currentValue;
 });
