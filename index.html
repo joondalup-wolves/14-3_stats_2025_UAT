@@ -1380,51 +1380,50 @@ function formatDecimal(num) {
     return pct.toFixed(1) + "%";
   }
   
-  function getTopPlayers(players, statKey, count = 5, descending = true) {
-    // For percentages, we need to calculate them first
-    if (statKey === 'fgPct') {
-      players = players.map(p => ({
-        ...p,
-        fgPct: p.fga > 0 ? p.fgm / p.fga : 0
-      }));
-    } else if (statKey === 'ftPct') {
-      players = players.map(p => ({
-        ...p,
-        ftPct: p.fta > 0 ? p.ftm / p.fta : 0
-      }));
-    }
-    
-    // Sort players by the stat
-    const sorted = [...players].sort((a, b) => {
-      if (descending) {
-        return b[statKey] - a[statKey];
-      } else {
-        return a[statKey] - b[statKey];
-      }
-    });
-    
-    // Return top players (filter out players with 0 in the stat)
-    return sorted
-      .filter(p => p[statKey] > 0)
-      .slice(0, count);
+function getTopPlayers(players, statKey, count = 4, descending = true) {
+  // For percentages, we need to calculate them first
+  if (statKey === 'fgPct') {
+    players = players.map(p => ({
+      ...p,
+      fgPct: p.fga > 0 ? p.fgm / p.fga : 0
+    }));
+  } else if (statKey === 'ftPct') {
+    players = players.map(p => ({
+      ...p,
+      ftPct: p.fta > 0 ? p.ftm / p.fta : 0
+    }));
   }
   
-function formatStatValue(player, statKey) {
-  switch(statKey) {
-    case 'pts':
-    case 'reb':
-    case 'ast':
-    case 'stl':
-    case 'blk':
-    case 'to':
-      return formatDecimal(player[statKey]);
-    case 'fgPct':
-      return formatPercentage(player.fgm, player.fga);
-    case 'ftPct':
-      return formatPercentage(player.ftm, player.fta);
-    default:
-      return player[statKey];
+  // Sort players by the stat
+  const sorted = [...players].sort((a, b) => {
+    if (descending) {
+      return b[statKey] - a[statKey];
+    } else {
+      return a[statKey] - b[statKey];
+    }
+  });
+  
+  // Filter out players with 0 in the stat
+  const filtered = sorted.filter(p => p[statKey] > 0);
+  
+  // If we have fewer than 4 players, just return them all
+  if (filtered.length <= count) {
+    return filtered;
   }
+  
+  // Get the top 4 players
+  const topPlayers = filtered.slice(0, count);
+  
+  // Check if there's a tie for 4th place
+  const fourthPlaceValue = topPlayers[count - 1][statKey];
+  const tiedPlayers = filtered.slice(count).filter(p => p[statKey] === fourthPlaceValue);
+  
+  // If there are tied players, add them to the list
+  if (tiedPlayers.length > 0) {
+    return [...topPlayers, ...tiedPlayers];
+  }
+  
+  return topPlayers;
 }
   
   async function renderStatLeaders() {
@@ -1452,7 +1451,7 @@ function formatStatValue(player, statKey) {
     let html = '';
     
     statCategories.forEach(category => {
-      const topPlayers = getTopPlayers(players, category.key, 5, category.descending);
+      const topPlayers = getTopPlayers(players, category.key, 4, category.descending);
       
       html += `
         <div class="stat-card">
@@ -1470,15 +1469,31 @@ function formatStatValue(player, statKey) {
           </tr>
         `;
       } else {
-        topPlayers.forEach((player, index) => {
-          html += `
-            <tr>
-              <td class="rank">${index + 1}</td>
-              <td class="player-name">${player.name}</td>
-              <td class="stat-value">${formatStatValue(player, category.key)}</td>
-            </tr>
-          `;
-        });
+// Keep track of the current rank and previous value
+let currentRank = 1;
+let previousValue = null;
+
+topPlayers.forEach((player, index) => {
+  const currentValue = player[category.key];
+  
+  // If this player has the same value as the previous one, they share the same rank
+  // Otherwise, increment the rank
+  if (previousValue !== null && currentValue === previousValue) {
+    // Same rank as previous player
+  } else {
+    currentRank = index + 1;
+  }
+  
+  html += `
+    <tr>
+      <td class="rank">${currentRank}</td>
+      <td class="player-name">${player.name}</td>
+      <td class="stat-value">${formatStatValue(player, category.key)}</td>
+    </tr>
+  `;
+  
+  previousValue = currentValue;
+});
       }
       
       html += `
